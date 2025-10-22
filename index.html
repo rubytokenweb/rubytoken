@@ -310,7 +310,123 @@
 
   </div>
 </footer>
+<!-- Cookie consent banner -->
+<div id="cookie-banner" class="fixed bottom-0 left-0 w-full bg-gray-900 text-gray-100 p-4 shadow-lg z-50 hidden">
+  <div class="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+    <div class="flex items-center gap-3">
+      <svg class="w-8 h-8 text-cyan-400" fill="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" /><path d="M8 12s1.5-2 4-2 4 2 4 2-1.5 2-4 2-4-2-4-2z" fill="#072A2F"/></svg>
+      <p class="text-sm sm:text-base">Hamari website cookies ka istemal karti hai — site ka best experience aur zaroori features ke liye. Aap "Accept All" kar ke agree kar sakte hain ya preferences set kar sakte hain.</p>
+    </div>
+    <div class="flex gap-2">
+      <button id="btn-accept-all" class="px-4 py-2 rounded-lg font-semibold bg-cyan-400 text-gray-900 hover:bg-cyan-500 transition">Accept All</button>
+      <button id="btn-manage" class="px-4 py-2 rounded-lg font-semibold border border-gray-600 hover:bg-gray-700 transition">Manage Preferences</button>
+    </div>
+  </div>
+</div>
 
+<!-- Preferences Modal -->
+<div id="cookie-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+  <div class="bg-gray-800 text-gray-100 p-6 rounded-xl max-w-lg w-full relative">
+    <h2 class="text-xl font-bold mb-4">Cookie Preferences</h2>
+    <p class="mb-4 text-gray-300">Aap apni cookie settings customize kar sakte hain:</p>
+    <div class="flex flex-col gap-3 mb-4">
+      <label class="flex items-center gap-2">
+        <input type="checkbox" id="essential" checked disabled class="accent-cyan-400">
+        <span>Essential Cookies (Always Active)</span>
+      </label>
+      <label class="flex items-center gap-2">
+        <input type="checkbox" id="analytics" class="accent-cyan-400">
+        <span>Analytics Cookies</span>
+      </label>
+      <label class="flex items-center gap-2">
+        <input type="checkbox" id="marketing" class="accent-cyan-400">
+        <span>Marketing / Ads Cookies</span>
+      </label>
+    </div>
+    <div class="flex justify-end gap-2">
+      <button id="btn-save" class="px-4 py-2 rounded-lg font-semibold bg-cyan-400 text-gray-900 hover:bg-cyan-500 transition">Save Preferences</button>
+      <button id="btn-reject-all" class="px-4 py-2 rounded-lg font-semibold border border-gray-600 hover:bg-gray-700 transition">Reject All</button>
+      <button id="btn-close-modal" class="absolute top-3 right-3 text-gray-400 hover:text-gray-200">&times;</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const CONSENT_KEY = 'site_cookie_consent';
+  const consent = JSON.parse(localStorage.getItem(CONSENT_KEY));
+
+  const banner = document.getElementById('cookie-banner');
+  const modal = document.getElementById('cookie-modal');
+
+  const btnAcceptAll = document.getElementById('btn-accept-all');
+  const btnManage = document.getElementById('btn-manage');
+  const btnSave = document.getElementById('btn-save');
+  const btnRejectAll = document.getElementById('btn-reject-all');
+  const btnCloseModal = document.getElementById('btn-close-modal');
+
+  const analyticsCheckbox = document.getElementById('analytics');
+  const marketingCheckbox = document.getElementById('marketing');
+
+  // Show banner if no consent
+  if(!consent) banner.classList.remove('hidden');
+
+  // Accept All
+  btnAcceptAll.addEventListener('click', () => {
+    const newConsent = {essential:true, analytics:true, marketing:true};
+    localStorage.setItem(CONSENT_KEY, JSON.stringify(newConsent));
+    banner.classList.add('hidden');
+    enableFeatures(newConsent);
+  });
+
+  // Manage Preferences
+  btnManage.addEventListener('click', () => {
+    modal.classList.remove('hidden');
+  });
+
+  // Close modal
+  btnCloseModal.addEventListener('click', () => modal.classList.add('hidden'));
+
+  // Save Preferences
+  btnSave.addEventListener('click', () => {
+    const newConsent = {
+      essential: true,
+      analytics: analyticsCheckbox.checked,
+      marketing: marketingCheckbox.checked
+    };
+    localStorage.setItem(CONSENT_KEY, JSON.stringify(newConsent));
+    modal.classList.add('hidden');
+    banner.classList.add('hidden');
+    enableFeatures(newConsent);
+  });
+
+  // Reject All (except essential)
+  btnRejectAll.addEventListener('click', () => {
+    const newConsent = {essential:true, analytics:false, marketing:false};
+    localStorage.setItem(CONSENT_KEY, JSON.stringify(newConsent));
+    modal.classList.add('hidden');
+    banner.classList.add('hidden');
+    enableFeatures(newConsent);
+  });
+
+  // Enable features based on consent
+  function enableFeatures(consent){
+    console.log('User Consent:', consent);
+    // Example: load analytics if allowed
+    if(consent.analytics){
+      console.log('Analytics enabled');
+      // Load analytics scripts dynamically here
+    }
+    if(consent.marketing){
+      console.log('Marketing/Ads enabled');
+    }
+  }
+
+  // Load previous consent if exists
+  if(consent) enableFeatures(consent);
+
+})();
+  </script>
   <!-- Script -->
   <script>
     // Mobile Menu
