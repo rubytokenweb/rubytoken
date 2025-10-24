@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RUBY Airdrop Claim</title>
+
+  <!-- Tailwind -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Ethers.js -->
+  <script src="https://cdn.jsdelivr.net/npm/ethers@6.11.1/dist/ethers.umd.min.js"></script>
+  <!-- WalletConnect + Web3Modal -->
+  <script src="https://cdn.jsdelivr.net/npm/@walletconnect/ethereum-provider@2.11.1/dist/index.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@web3modal/standalone@2.6.3/dist/index.min.js"></script>
+
+  <style>
+    /* 🔥 Animated Gradient Background */
+    body {
+      background: linear-gradient(270deg, #ff416c, #ff4b2b, #ff6b6b, #fddb92, #24c6dc);
+      background-size: 1200% 1200%;
+      animation: gradientShift 18s ease infinite;
+    }
+    @keyframes gradientShift {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    /* Glass card effect */
+    .glass {
+      backdrop-filter: blur(14px);
+      background: rgba(255, 255, 255, 0.2);
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.25);
+    }
+
+    /* Glow button hover */
+    .glow:hover {
+      box-shadow: 0 0 20px rgba(255,255,255,0.6);
+      transform: scale(1.05);
+    }
+
+    /* Smooth entry */
+    .fade-in {
+      animation: fadeIn 1.4s ease forwards;
+    }
+    @keyframes fadeIn {
+      from {opacity: 0; transform: translateY(10px);}
+      to {opacity: 1; transform: translateY(0);}
+    }
+  </style>
+</head>
+
+<body class="min-h-screen flex items-center justify-center text-white font-sans">
+  <div class="glass p-8 rounded-3xl max-w-md w-full text-center fade-in">
+
+    <h1 class="text-3xl font-bold mb-2">🎁 RUBY Airdrop Claim</h1>
+    <p class="text-gray-200 mb-6">Claim your free <span class="font-semibold text-yellow-300">RUBY</span> tokens now!</p>
+
+    <!-- Wallet buttons -->
+    <div class="flex flex-wrap justify-center gap-4 mb-6">
+      <button id="connectBtn" class="bg-red-500 glow hover:bg-red-600 text-white px-5 py-2 rounded-xl font-semibold flex items-center gap-2">
+        <img src="https://cryptologos.cc/logos/metamask-fox-logo.png" class="w-6 h-6" />
+        Connect Wallet
+      </button>
+      <button id="claimBtn" class="bg-green-500 glow hover:bg-green-600 text-white px-5 py-2 rounded-xl font-semibold flex items-center gap-2" disabled>
+        <img src="https://cdn-icons-png.flaticon.com/512/833/833472.png" class="w-5 h-5" />
+        Claim Tokens
+      </button>
+    </div>
+
+    <p id="status" class="text-sm text-white min-h-[1.5em]"></p>
+
+    <div class="mt-6 border-t border-white/30 pt-4 text-xs text-gray-200">
+      <div class="flex justify-center gap-3 opacity-80 mb-2">
+        <img src="trustwallet.png" class="w-5 h-5" />
+        <img src="metamask.png" class="w-5 h-5" />
+        <img src="binance.png" class="w-5 h-5" />
+       </div>
+      <p>Supports MetaMask · Trust Wallet · Binance</p>
+      <p class="mt-2">© 2025 RUBY Token</p>
+    </div>
+  </div>
+
+  <script>
+    let provider, signer, userAddress;
+    const connectBtn = document.getElementById("connectBtn");
+    const claimBtn = document.getElementById("claimBtn");
+    const status = document.getElementById("status");
+
+    // 👉 Replace with your contract and WalletConnect Project ID
+    const contractAddress = "YOUR_CONTRACT_ADDRESS";
+    const projectId = "YOUR_WALLETCONNECT_PROJECT_ID";
+    const abi = [
+      "function claim(uint256 amount, bytes32[] calldata proof) external"
+    ];
+
+    const web3Modal = new window.Web3Modal({
+      walletConnectVersion: 2,
+      projectId,
+      themeMode: "light",
+      chains: [{ chainId: 56, name: "BNB Smart Chain", rpc: "https://bsc-dataseed.binance.org/" }]
+    });
+
+    connectBtn.addEventListener("click", async () => {
+      try {
+        const instance = await web3Modal.connect();
+        provider = new ethers.BrowserProvider(instance);
+        signer = await provider.getSigner();
+        userAddress = (await signer.getAddress()).toLowerCase();
+        status.textContent = "✅ Connected: " + userAddress.slice(0, 6) + "..." + userAddress.slice(-4);
+        claimBtn.disabled = false;
+      } catch (err) {
+        status.textContent = "❌ " + err.message;
+      }
+    });
+
+    claimBtn.addEventListener("click", async () => {
+      try {
+        const res = await fetch("airdropData.json");
+        const data = await res.json();
+        const user = data[userAddress];
+
+        if (!user) {
+          status.textContent = "🚫 Not eligible for airdrop!";
+          return;
+        }
+
+        const contract = new ethers.Contract(contractAddress, abi, signer);
+        status.textContent = "⏳ Processing transaction...";
+        const tx = await contract.claim(user.amount, user.proof);
+        await tx.wait();
+        status.textContent = "✅ Successfully claimed RUBY tokens!";
+      } catch (err) {
+        status.textContent = "❌ " + err.message;
+      }
+    });
+  </script>
+</body>
+  </html>
